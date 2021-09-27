@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wl.demo2.dao.RoleDao">
+    <sql id="Base_Column_List">
+            role_id,name,description, create_by, update_by, create_time, update_time
+    </sql>
+
+    <resultMap id="roleSmallDto" type="com.wl.demo2.service.dto.RoleSmallDto">
+        <result property="id" column="role_id"/>
+    </resultMap>
+
+    <select id="findRolesByUserId" resultMap="roleSmallDto">
+        select sys_role.role_id,sys_role.`name` from sys_user join sys_users_roles on sys_user.user_id=sys_users_roles.user_id
+                                                              join sys_role on sys_users_roles.role_id=sys_role.role_id
+        where sys_user.user_id=#{userId}
+    </select>
+
+
+</mapper>
