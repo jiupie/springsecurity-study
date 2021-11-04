@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wl.oauth2.dao.MenuDao">
+    <sql id="Base_Column_List">
+            menu_id, pid, sub_count, type, title, name, component, menu_sort, icon, path, i_frame, cache, hidden, permission, create_by, update_by, create_time, update_time
+    </sql>
+
+    <resultMap id="menuMap" type="com.wl.oauth2.daomain.Menu">
+        <result column="menu_id" property="id"></result>
+    </resultMap>
+
+    <select id="findAllByRole" resultMap="menuMap">
+        select sys_menu.* from  sys_role join sys_roles_menus on sys_role.role_id=sys_roles_menus.role_id
+                                join sys_menu on sys_menu.menu_id=sys_roles_menus.menu_id
+        <where>
+            sys_roles_menus.role_id in
+            <foreach collection="list" open="(" separator="," close=")" item="roleId">
+                #{roleId}
+            </foreach>
+        </where>
+
+
+    </select>
+
+
+</mapper>

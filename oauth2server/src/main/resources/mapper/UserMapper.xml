@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wl.oauth2.dao.UserDao">
+    <sql id="Base_Column_List">
+        user_id, username, nick_name, gender, phone, email, avatar_name,  password, is_admin, enabled, create_by, update_by, pwd_reset_time, create_time, update_time
+    </sql>
+    <resultMap id="userDto" type="com.wl.oauth2.service.dto.UserDto">
+        <result column="user_id" property="id"></result>
+    </resultMap>
+    <select  id="findUserByUserName" resultMap="userDto">
+        select <include refid="Base_Column_List"></include> from sys_user where username=#{userName}
+    </select>
+
+</mapper>

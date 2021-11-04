@@ -1,11 +1,11 @@
-package com.wl.demo2.config;
+package com.wl.oauth2.config;
 
-import com.wl.demo2.config.bean.SecurityProperties;
-import com.wl.demo2.utils.TokenProvider;
+
+import com.wl.oauth2.config.bean.SecurityProperties;
+import com.wl.oauth2.utils.TokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;

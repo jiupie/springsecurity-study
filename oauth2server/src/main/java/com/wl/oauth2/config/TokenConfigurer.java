@@ -1,8 +1,9 @@
-package com.wl.demo2.config;
+package com.wl.oauth2.config;
 
-import com.wl.demo2.config.bean.SecurityProperties;
-import com.wl.demo2.config.filter.TokenFilter;
-import com.wl.demo2.utils.TokenProvider;
+
+import com.wl.oauth2.config.bean.SecurityProperties;
+import com.wl.oauth2.config.filter.TokenFilter;
+import com.wl.oauth2.utils.TokenProvider;
 import lombok.AllArgsConstructor;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
