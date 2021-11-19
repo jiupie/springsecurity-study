@@ -31,6 +31,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private AuthenticationHandler authenticationErrorHandler;
+
     @Autowired
     private JwtAccessDeniedHandler jwtAccessDeniedHandler;
 

@@ -20,6 +20,11 @@ spring:
     db-history-used: true
     #activiti 关闭自动部署，就是在resource下的文件检查并部署
     check-process-definitions: false
+  redis:
+    host: 127.0.0.1
+    port: 6379
+  profiles:
+    active: dev
 #jwt
 jwt:
   header: Authorization

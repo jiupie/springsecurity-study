@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.5.2</version>
+        <version>2.2.1.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.wl</groupId>
@@ -25,6 +25,7 @@
         <module>demo1</module>
         <module>demo2</module>
         <module>oauth2server</module>
+        <module>oauth2resources</module>
     </modules>
     <dependencies>
         <dependency>
