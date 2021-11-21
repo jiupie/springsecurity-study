@@ -11,7 +11,7 @@ public class SecretTest {
 
     @Test
     public void test(){
-        System.out.println(new BCryptPasswordEncoder().encode("sdfadsxcxzcdsfasdfd"));
+        System.out.println(new BCryptPasswordEncoder().encode("mate"));
 
     }
 }
