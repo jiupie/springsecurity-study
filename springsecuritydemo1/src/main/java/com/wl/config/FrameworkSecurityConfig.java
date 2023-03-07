@@ -5,11 +5,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy;
+import org.springframework.security.web.authentication.session.*;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author 南顾北衫
@@ -27,8 +29,6 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
     private AccessDeniedHandlerConfig accessDeniedHandlerConfig;
 
 
-
-
     /**
      * HttpSecurity构建 DefaultSecurityFilterChain
      *
@@ -38,28 +38,29 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         //表单
-//        http.authorizeRequests().anyRequest().authenticated().and().formLogin();
+        http.authorizeRequests().anyRequest().authenticated().and().formLogin();
+        http.sessionManagement().sessionFixation().migrateSession().maximumSessions(1).maxSessionsPreventsLogin(true);
 
         //自定义
         //session 会话固定策略
         // 最大会话数
 //
-        http.csrf().disable();
-        http.formLogin().disable();
-
-        http.addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-        http.sessionManagement().sessionFixation().migrateSession().maximumSessions(1);
-
-        http.authorizeHttpRequests()
-                .antMatchers("/login").permitAll()
-                .anyRequest().authenticated();
-
-        http.exceptionHandling()
-                .accessDeniedHandler(accessDeniedHandlerConfig)
-                .authenticationEntryPoint(authenticationHandlerConfig);
+//        http.csrf().disable();
+//        http.formLogin().disable();
+//
+//        http.addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+//        http.sessionManagement().maximumSessions(1);
+//
+//        http.authorizeHttpRequests()
+//                .antMatchers("/login").permitAll()
+//                .anyRequest().authenticated();
+//
+//        http.exceptionHandling()
+//                .accessDeniedHandler(accessDeniedHandlerConfig)
+//                .authenticationEntryPoint(authenticationHandlerConfig);
     }
 
-    @Bean
+//    @Bean
     public SelfSessionFilter authenticationFilter() throws Exception {
         SelfSessionFilter selfSessionFilter = new SelfSessionFilter();
         selfSessionFilter.setAuthenticationManager(authenticationManagerBean());
@@ -69,11 +70,23 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
         return selfSessionFilter;
     }
 
-    @Bean
+//    @Bean
     public SessionAuthenticationStrategy sessionStrategy() {
         // 使用默认的会话固定保护策略，也可以自定义其他策略
         SessionFixationProtectionStrategy sessionFixationProtectionStrategy = new SessionFixationProtectionStrategy();
 
-        return sessionFixationProtectionStrategy;
+        SessionRegistryImpl sessionRegistry = new SessionRegistryImpl();
+        ConcurrentSessionControlAuthenticationStrategy concurrentSessionControlAuthenticationStrategy = new ConcurrentSessionControlAuthenticationStrategy(sessionRegistry);
+        concurrentSessionControlAuthenticationStrategy.setMaximumSessions(1);
+
+        RegisterSessionAuthenticationStrategy registerSessionAuthenticationStrategy = new RegisterSessionAuthenticationStrategy(sessionRegistry);
+
+
+        List<SessionAuthenticationStrategy> objects = new ArrayList<>();
+        objects.add(sessionFixationProtectionStrategy);
+        objects.add(registerSessionAuthenticationStrategy);
+        objects.add(concurrentSessionControlAuthenticationStrategy);
+
+        return new CompositeSessionAuthenticationStrategy(objects);
     }
 }
