@@ -1,9 +1,13 @@
 package com.wl.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy;
 
 import javax.annotation.Resource;
 
@@ -13,7 +17,7 @@ import javax.annotation.Resource;
  * @date 2022/8/27
  */
 @Configuration
-//public class FrameworkSecurityConfig<S extends Session> extends WebSecurityConfigurerAdapter {
+@EnableWebSecurity
 public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Resource
@@ -22,15 +26,7 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
     @Resource
     private AccessDeniedHandlerConfig accessDeniedHandlerConfig;
 
-    /**
-     * websecurity 是构建filter
-     *
-     * @param web
-     * @throws Exception
-     */
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-    }
+
 
 
     /**
@@ -41,33 +37,43 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable();
-        http.formLogin().disable();
-//        http.formLogin().loginPage("/login");
+        //表单
+//        http.authorizeRequests().anyRequest().authenticated().and().formLogin();
+
+        //自定义
         //session 会话固定策略
         // 最大会话数
+//
+        http.csrf().disable();
+        http.formLogin().disable();
 
-        http.sessionManagement().sessionFixation().migrateSession();
-        http
-//                //授权
-                .authorizeHttpRequests()
+        http.addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.sessionManagement().sessionFixation().migrateSession().maximumSessions(1);
+
+        http.authorizeHttpRequests()
                 .antMatchers("/login").permitAll()
                 .anyRequest().authenticated();
-
-//                .hasAnyRole("admin")
-
 
         http.exceptionHandling()
                 .accessDeniedHandler(accessDeniedHandlerConfig)
                 .authenticationEntryPoint(authenticationHandlerConfig);
     }
 
+    @Bean
+    public SelfSessionFilter authenticationFilter() throws Exception {
+        SelfSessionFilter selfSessionFilter = new SelfSessionFilter();
+        selfSessionFilter.setAuthenticationManager(authenticationManagerBean());
+        selfSessionFilter.setAuthenticationSuccessHandler(new MyAuthenticationSuccessHandler());
+        selfSessionFilter.setAuthenticationFailureHandler(new MyAuthenticationFailureHandler());
+        selfSessionFilter.setSessionAuthenticationStrategy(sessionStrategy());
+        return selfSessionFilter;
+    }
 
-//    @Resource
-//    private FindByIndexNameSessionRepository<S> sessionRepository;
-//
-//    @Bean
-//    public SpringSessionBackedSessionRegistry<S> sessionRegistry() {
-//        return new SpringSessionBackedSessionRegistry<>(this.sessionRepository);
-//    }
+    @Bean
+    public SessionAuthenticationStrategy sessionStrategy() {
+        // 使用默认的会话固定保护策略，也可以自定义其他策略
+        SessionFixationProtectionStrategy sessionFixationProtectionStrategy = new SessionFixationProtectionStrategy();
+
+        return sessionFixationProtectionStrategy;
+    }
 }
