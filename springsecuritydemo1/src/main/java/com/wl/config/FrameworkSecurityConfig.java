@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.*;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -29,6 +30,12 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
     private AccessDeniedHandlerConfig accessDeniedHandlerConfig;
 
 
+//    @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.inMemoryAuthentication()
+//                .withUser("user").password("{noop}123456").roles("USER");
+//    }
+
     /**
      * HttpSecurity构建 DefaultSecurityFilterChain
      *
@@ -38,29 +45,34 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         //表单
-        http.authorizeRequests().anyRequest().authenticated().and().formLogin();
-        http.sessionManagement().sessionFixation().migrateSession().maximumSessions(1).maxSessionsPreventsLogin(true);
+//        http.authorizeRequests().anyRequest().authenticated().and().formLogin();
+//        http.sessionManagement().sessionFixation().migrateSession().maximumSessions(1).maxSessionsPreventsLogin(true);
 
-        //自定义
-        //session 会话固定策略
-        // 最大会话数
-//
-//        http.csrf().disable();
-//        http.formLogin().disable();
-//
-//        http.addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-//        http.sessionManagement().maximumSessions(1);
-//
-//        http.authorizeHttpRequests()
-//                .antMatchers("/login").permitAll()
-//                .anyRequest().authenticated();
-//
-//        http.exceptionHandling()
-//                .accessDeniedHandler(accessDeniedHandlerConfig)
-//                .authenticationEntryPoint(authenticationHandlerConfig);
+        //自定义认证方式
+
+        //csrf设置 使用双重cookie校验
+        CookieCsrfTokenRepository cookieCsrfTokenRepository = new CookieCsrfTokenRepository();
+        cookieCsrfTokenRepository.setCookiePath("/");
+        cookieCsrfTokenRepository.setCookieHttpOnly(false);
+        http.csrf().ignoringAntMatchers("/login").csrfTokenRepository(cookieCsrfTokenRepository);
+
+        //停用form表单登录
+        http.formLogin().disable();
+
+        //防御点击劫持 如果有html页面
+        http.headers().frameOptions().disable();
+
+        //自定义认证
+        http.addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        //url授权设置
+        http.authorizeHttpRequests().antMatchers("/login").permitAll().anyRequest().authenticated();
+
+        // 认证 授权失败设置
+        http.exceptionHandling().accessDeniedHandler(accessDeniedHandlerConfig).authenticationEntryPoint(authenticationHandlerConfig);
     }
 
-//    @Bean
+    @Bean
     public SelfSessionFilter authenticationFilter() throws Exception {
         SelfSessionFilter selfSessionFilter = new SelfSessionFilter();
         selfSessionFilter.setAuthenticationManager(authenticationManagerBean());
@@ -70,22 +82,27 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
         return selfSessionFilter;
     }
 
-//    @Bean
     public SessionAuthenticationStrategy sessionStrategy() {
-        // 使用默认的会话固定保护策略，也可以自定义其他策略
-        SessionFixationProtectionStrategy sessionFixationProtectionStrategy = new SessionFixationProtectionStrategy();
 
         SessionRegistryImpl sessionRegistry = new SessionRegistryImpl();
-        ConcurrentSessionControlAuthenticationStrategy concurrentSessionControlAuthenticationStrategy = new ConcurrentSessionControlAuthenticationStrategy(sessionRegistry);
-        concurrentSessionControlAuthenticationStrategy.setMaximumSessions(1);
 
+        // 并发会话数
+        ConcurrentSessionControlAuthenticationStrategy concurrentSessionControlAuthenticationStrategy = new ConcurrentSessionControlAuthenticationStrategy(sessionRegistry);
+        concurrentSessionControlAuthenticationStrategy.setMaximumSessions(2);
+        concurrentSessionControlAuthenticationStrategy.setExceptionIfMaximumExceeded(true);
+
+        //session 会话固定防护策略
+        SessionFixationProtectionStrategy sessionFixationProtectionStrategy = new SessionFixationProtectionStrategy();
+
+
+        //会话注册
         RegisterSessionAuthenticationStrategy registerSessionAuthenticationStrategy = new RegisterSessionAuthenticationStrategy(sessionRegistry);
 
-
         List<SessionAuthenticationStrategy> objects = new ArrayList<>();
+
+        objects.add(concurrentSessionControlAuthenticationStrategy);
         objects.add(sessionFixationProtectionStrategy);
         objects.add(registerSessionAuthenticationStrategy);
-        objects.add(concurrentSessionControlAuthenticationStrategy);
 
         return new CompositeSessionAuthenticationStrategy(objects);
     }
