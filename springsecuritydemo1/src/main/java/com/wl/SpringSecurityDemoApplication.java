@@ -3,6 +3,7 @@ package com.wl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
 /**
  * @author 南顾北衫
@@ -11,7 +12,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
  */
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @SpringBootApplication
-//@EnableRedisHttpSession
+@EnableRedisHttpSession
 public class SpringSecurityDemoApplication {
     public static void main(String[] args) {
         SpringApplication.run(SpringSecurityDemoApplication.class, args);

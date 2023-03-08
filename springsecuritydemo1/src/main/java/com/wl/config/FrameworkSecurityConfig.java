@@ -1,14 +1,17 @@
 package com.wl.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.*;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.session.Session;
+import org.springframework.session.data.redis.RedisIndexedSessionRepository;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -28,6 +31,9 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Resource
     private AccessDeniedHandlerConfig accessDeniedHandlerConfig;
+
+    @Autowired
+    private RedisIndexedSessionRepository redisIndexedSessionRepository;
 
 
 //    @Override
@@ -84,19 +90,19 @@ public class FrameworkSecurityConfig extends WebSecurityConfigurerAdapter {
 
     public SessionAuthenticationStrategy sessionStrategy() {
 
-        SessionRegistryImpl sessionRegistry = new SessionRegistryImpl();
+        //redis session
+        SpringSessionBackedSessionRegistry<Session> sessionSpringSessionBackedSessionRegistry = new SpringSessionBackedSessionRegistry(redisIndexedSessionRepository);
 
         // 并发会话数
-        ConcurrentSessionControlAuthenticationStrategy concurrentSessionControlAuthenticationStrategy = new ConcurrentSessionControlAuthenticationStrategy(sessionRegistry);
+        ConcurrentSessionControlAuthenticationStrategy concurrentSessionControlAuthenticationStrategy = new ConcurrentSessionControlAuthenticationStrategy(sessionSpringSessionBackedSessionRegistry);
         concurrentSessionControlAuthenticationStrategy.setMaximumSessions(2);
         concurrentSessionControlAuthenticationStrategy.setExceptionIfMaximumExceeded(true);
 
         //session 会话固定防护策略
         SessionFixationProtectionStrategy sessionFixationProtectionStrategy = new SessionFixationProtectionStrategy();
 
-
         //会话注册
-        RegisterSessionAuthenticationStrategy registerSessionAuthenticationStrategy = new RegisterSessionAuthenticationStrategy(sessionRegistry);
+        RegisterSessionAuthenticationStrategy registerSessionAuthenticationStrategy = new RegisterSessionAuthenticationStrategy(sessionSpringSessionBackedSessionRegistry);
 
         List<SessionAuthenticationStrategy> objects = new ArrayList<>();
 
